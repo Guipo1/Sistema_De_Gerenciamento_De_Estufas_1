@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/cadastro.css">
+<title>GreenHouse Pro - Cadastro</title>
+</head>
+<body>
+
+<div class="register-card">
+
+    <div class="logo">
+        <div class="logo-icon">🌿</div>
+        <h1>GreenHouse Pro</h1>
+        <p>Cadastro de Produtores e Administradores</p>
+    </div>
+
+    <form id="registerForm">
+
+        <div class="form-group">
+            <label>Nome de Usuário</label>
+            <input
+                type="text"
+                id="usuario"
+                placeholder="Digite seu nome de usuário">
+        </div>
+
+        <div class="form-group">
+            <label>Senha</label>
+            <input
+                type="password"
+                id="senha"
+                placeholder="Crie uma senha">
+        </div>
+
+        <div class="form-group">
+            <label>Endereço</label>
+            <input
+                type="text"
+                id="endereco"
+                placeholder="Rua, número, cidade e estado">
+        </div>
+
+        <div class="form-group">
+            <label>Contato</label>
+            <input
+                type="text"
+                id="contato"
+                placeholder="Telefone ou e-mail">
+        </div>
+
+        <button type="submit">
+            Criar Conta
+        </button>
+
+        <div id="message" class="message"></div>
+
+    </form>
+
+    <div class="login-link">
+        Já possui uma conta?
+        <a href="/login">Entrar no sistema</a>
+    </div>
+
+    <div class="footer">
+        Agricultura Inteligente • Monitoramento • Automação
+    </div>
+
+</div>
+
+<script src="/cadastro.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  cache-redis:
+    image: redis:7-alpine
+    container_name: saas-redis
+    restart: always
+    ports:
+      - "6379:6379" # Abre para o seu PC local testar por fora se quiser
+    volumes:
+      - ./redis:/data # Salva os dados persistentes na sua nova pasta
+    networks:
+      - rede-saas
+
+  broker-mqtt:
+    image: eclipse-mosquitto:2
+    container_name: saas-mosquitto
+    restart: always
+    ports:
+      - "8883:8883" # Porta padrão do MQTT para os sensores se conectarem
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/config/passwordfile:/mosquitto/config/passwordfile
+      - ./mosquitto/certs:/mosquitto/certs:ro
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - rede-saas
+  servidor-front-end:
+    build: ./servidor-front-end 
+    container_name: servidor-front-end
+    ports:
+      - "8080:80" 
+    restart: always
+    networks:
+      - rede-saas 
+
+  relacional:
+    image: postgres:16-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+     POSTGRES_USER: "guilherme28"
+     POSTGRES_PASSWORD: "deiKwecu9JJ20wosT5dkwowP09JKwks79"
+     POSTGRES_DB: "saas_estufas"
+    volumes:
+      - ./dados-postgres-novo:/var/lib/postgresql/data
+    ports:
+     - "5555:5432"
+    networks:
+      - rede-saas
+
+  nao-relacional:
+    image: mongo:7.0
+    container_name: mongo-db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_MONGO_PASSWORD}
+    volumes:
+      - ./dados-mongo-novo:/data/db
+    networks:
+      - rede-saas
+    ports:
+      - "27017:27017"
+networks:
+  rede-saas:
+    driver: bridge

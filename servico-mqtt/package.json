@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "mqtt": "^5.15.2",
+    "nodemon": "^3.1.14",
+    "pg": "^8.22.0",
+    "redis": "^6.1.0"
+  },
+  "name": "servico-mqtt",
+  "version": "1.0.0",
+  "main": "mqtt-worker.js",
+  "scripts": {
+    "start": "nodemon mqtt-worker.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

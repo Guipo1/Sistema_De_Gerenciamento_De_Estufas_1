@@ -1,0 +1,5 @@
+.env
+node_modules/
+dados-postgres-novo/
+dados-mongo-novo/
+mosquitto/
