@@ -46,7 +46,7 @@ services:
     volumes:
       - ./dados-postgres-novo:/var/lib/postgresql/data
     ports:
-     - "5555:5432"
+     - "5556:5432"
     networks:
       - rede-saas
 

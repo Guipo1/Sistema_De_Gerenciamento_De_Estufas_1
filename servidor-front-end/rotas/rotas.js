@@ -3,7 +3,8 @@ const rotas = express.Router();
 const path = require("path");
 const verificadorToken = require("../auth/verificador_token")
 const controlador = require("../controlador/controlador");
-const { Usuario, Estufa } = require("../models/models");
+const { Usuario, Estufa, Sensor } = require("../models/models");
+const redisClient = require("../controlador/cliente-redis");
 //pagina css do login
 rotas.get("/login.css", async (req, res) => {
     res.sendFile(path.join(__dirname, "../src/login.css"));
@@ -164,7 +165,8 @@ rotas.post("/criar/sensor/:idEstufa", verificadorToken, async (req, res) => {
         const idEstufa = req.params.idEstufa;
         const nome = req.body.nomeSensor;
         const codigo_serial = req.body.codigo_serial;
-        const cadastroSensor = await controlador.cadastrarSensor(nomeUsuario, idEstufa, codigo_serial, nome);
+        const chave = req.body.chave_secreta;
+        const cadastroSensor = await controlador.cadastrarSensor(nomeUsuario, idEstufa, codigo_serial, nome, chave);
         return res.status(200).json(cadastroSensor);
     } catch (err) {
         console.warn("Nao foi possivel criar o sensor");
@@ -178,7 +180,7 @@ rotas.post("/mudar/sensor/:id", verificadorToken, async (req, res) => {
         const idSensor = req.params.id;
         const nomeUsuario = req.usuarioLogado.usuario;
         const { codigo_serial, nomeSensor } = req.body;
-        const mudansas = { nome: nomeSensor, codigo_serial: codigo_serial }
+        const mudansas = { nome: nomeSensor }
         Object.keys(mudansas).forEach(key => mudansas[key] === undefined && delete mudansas[key]);
         const mudansa = await controlador.mudarSensor(idSensor, mudansas, nomeUsuario);
         return res.status(200).json(mudansa);
@@ -233,4 +235,23 @@ rotas.post("/sensor/chave", verificadorToken, async (req, res) => {
         return res.status(400).json({ msg: "Não foi possivel cadastrar chave do sensor" })
     }
 });
+async function resetarStatusSensoresParaInativo() {
+    try {
+        // 1. Busca todos os sensores cadastrados no banco de dados
+        const todosOsSensores = await Sensor.find({});
+
+        // 2. Para cada sensor, grava 'INATIVO' no Redis sem tempo de expiração (ou com tempo longo)
+        for (const sensor of todosOsSensores) {
+
+            await redisClient.set(`status:${sensor.codigo_serial}`, "Inativo");
+        }
+
+        console.log(`🔄 Servidor reiniciado: Status de ${todosOsSensores.length} sensores definidos como INATIVO.`);
+    } catch (error) {
+        console.error('Erro ao resetar status dos sensores:', error);
+    }
+}
+
+// Chame essa função logo após a conexão com o MongoDB e o Redis estarem prontas
+resetarStatusSensoresParaInativo();
 module.exports = rotas;

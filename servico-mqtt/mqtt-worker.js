@@ -9,15 +9,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 console.log(' Iniciando diagnóstico de conexões...');
 
-//  1. Verificação de conexão com o PostgreSQL
-pool.query('SELECT NOW()')
-    .then(() => {
-        console.log(' [POSTGRESQL] -> Conectado com sucesso!');
-    })
-    .catch((erro) => {
-        console.error(' [POSTGRESQL] -> ERRO CRÍTICO ao conectar:', erro.message);
-    });
-
 //  2. Verificação de conexão com o Redis
 // Nota: Dependendo da versão do seu pacote redis, pode ser client.ping() ou escutar eventos do client
 redisClient.ping()
@@ -64,6 +55,14 @@ mqttClient.on('connect', () => {
 mqttClient.on('error', (erro) => {
     console.error(' [MOSQUITTO] -> Erro na conexão com o Broker:', erro.message);
 });
+//  1. Verificação de conexão com o PostgreSQL
+pool.query('SELECT NOW()')
+    .then(() => {
+        console.log(' [POSTGRESQL] -> Conectado com sucesso!');
+    })
+    .catch((erro) => {
+        console.error(' [POSTGRESQL] -> ERRO CRÍTICO ao conectar:', erro.message);
+    });
 // Toda vez que uma mensagem chegar em QUALQUER tópico inscrito, este evento dispara
 mqttClient.on('message', async (topic, message) => {
     var codigo_serial = null;
@@ -97,44 +96,55 @@ mqttClient.on('message', async (topic, message) => {
             // Segurança: Verifica se o sensor enviou o Token JWT que ele deveria ter obtido antes
             try {
                 const tokenValido = jwt.verify(token_jwt, JWT_SECRET);
-                if (tokenValido.serial !== codigo_serial) throw new Error("Serial desalinhado");
+                if (tokenValido.codigo_serial !== codigo_serial) throw new Error("Serial desalinhado");
             } catch (err) {
                 console.warn(` REJEITADO: Token JWT inválido ou ausente para o sensor [${codigo_serial}]`);
                 enviarRespostaStatus(codigo_serial, "UNAUTHORIZED", "Token JWT invalido ou expirado.");
                 return;
             }
-
-            console.log(` TELEMETRIA PROCESSADA: Sensor [${codigo_serial}] verificado via JWT.`);
-            console.log("id da estufa", sensorRegistro)
-            const novaLeitura = await LeituraRepository.salvar(codigo_serial, temperatura, umidade, sensorRegistro.id_estufa);
-
-            enviarRespostaStatus(codigo_serial, "APPROVED", "Dados salvos.", novaLeitura.id);
+            if (sensorRegistro.id_sensor) {
+                const novaLeitura = await LeituraRepository.salvar(codigo_serial, temperatura, umidade, sensorRegistro.id_sensor);
+                await redisClient.set(`status:${codigo_serial}`, "Ativo", { EX: 60 });
+                enviarRespostaStatus(codigo_serial, "APPROVED", "Dados salvos.", novaLeitura.id);
+            } else {
+                throw new Error("erro ao salvar dados")
+            }
         }
 
         //  FLUXO B: Solicitação de Token Permanente (/sensor/token)
         if (topic === '/sensor/token') {
             const { chave_secreta_dispositivo } = dadosDoSensor;
-            console.log(dadosDoSensor)
+
             // CRUCIAL: A API confere se a chave que o sensor enviou bate com a chave guardada no Redis
             if (!chave_secreta_dispositivo || chave_secreta_dispositivo !== sensorRegistro.chave_secreta) {
                 console.warn(` TENTATIVA DE FRAUDE: Chave secreta incorreta para o sensor [${codigo_serial}]`);
                 enviarRespostaStatus(codigo_serial, "BAD_CREDENTIALS", "Chave secreta do dispositivo invalida.");
                 return;
             }
+            if (sensorRegistro.id_sensor) {
+                console.log(` CREDENCIAIS VÁLIDAS: Gerando JWT permanente para [${codigo_serial}]`);
 
-            console.log(` CREDENCIAIS VÁLIDAS: Gerando JWT permanente para [${codigo_serial}]`);
+                const tokenJsonWeb = jwt.sign(
+                    { codigo_serial: codigo_serial },
+                    JWT_SECRET,
+                    { expiresIn: "5m" }
+                );
 
-            const tokenJsonWeb = jwt.sign(
-                { serial: codigo_serial, estufaId: sensorRegistro.id_estufa },
-                JWT_SECRET
-            );
+                mqttClient.publish(`/sensor/${codigo_serial}/status`, JSON.stringify({
+                    status: "TOKEN_ISSUED",
+                    mensagem: "Autenticado com sucesso.",
+                    token: tokenJsonWeb,
+                    timestamp: new Date().toISOString()
+                }));
+                console.log(await redisClient.get(`sensor:${codigo_serial}`))
+            } else {
 
-            mqttClient.publish(`/sensor/${codigo_serial}/status`, JSON.stringify({
-                status: "TOKEN_ISSUED",
-                mensagem: "Autenticado com sucesso.",
-                token: tokenJsonWeb,
-                timestamp: new Date().toISOString()
-            }));
+                mqttClient.publish(`/sensor/${codigo_serial}/status`, JSON.stringify({
+                    status: "TOKEN_FAILED",
+                    mensagem: "Não foi possivel autenticar",
+                    timestamp: new Date().toISOString()
+                }));
+            }
         }
 
     } catch (erro) {

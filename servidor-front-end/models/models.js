@@ -24,6 +24,7 @@ const sensorSchema = new mongoose.Schema({
     estufaId: { type: mongoose.Schema.Types.ObjectId, ref: 'Estufa', required: true },
     codigo_serial: { type: String, required: true },
     dataCriasao: { type: Date, default: Date.now, required: true },
+    status: { type: String, default: "Inativo", required: true },
     ip: { type: String },
 });
 // Exportando os modelos para usar em outras partes do sistema
