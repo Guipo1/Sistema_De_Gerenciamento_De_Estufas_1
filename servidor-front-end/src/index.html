@@ -3,549 +3,1127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenSaaS - Gerenciamento por Estufas</title>
+    <title>AgroGreen - Gestão Inteligente de Estufas</title>
+
+    <!-- Chart.js para os gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome para Ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
-            --bg-primary: #121824;
-            --bg-sidebar: #1a2333;
-            --bg-card: #1f2b3e;
-            --accent-green: #10b981;
-            --accent-blue: #3b82f6;
-            --accent-orange: #f59e0b;
-            --accent-purple: #a855f7;
-            --accent-red: #ef4444;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #2e3d54;
+            --bg-body: #f4f7f5;
+            --bg-sidebar: #1b4332;
+            --bg-sidebar-hover: #2d6a4f;
+            --bg-card: #ffffff;
+            --text-dark: #2d3748;
+            --text-muted: #718096;
+            --primary-green: #2d6a4f;
+            --accent-green: #52b788;
+            --light-green: #e8f5e9;
+            --border-color: #e2e8f0;
+            --temp-color: #d97706;
+            --umi-color: #0284c7;
+            --danger-red: #e53e3e;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
+            background-color: var(--bg-body);
+            color: var(--text-dark);
             display: flex;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* --- MENU LATERAL --- */
+        /* --- MENU LATERAL (SIDEBAR) --- */
         .sidebar {
             width: 260px;
             background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-color);
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px;
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
 
-        .brand {
+        .sidebar-brand {
+            padding: 24px 20px;
+            font-size: 20px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 22px;
-            font-weight: bold;
-            color: var(--accent-green);
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .menu-items {
+        .sidebar-brand i { color: var(--accent-green); }
+
+        .sidebar-menu {
             list-style: none;
-            margin-top: 30px;
+            padding: 20px 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
+            flex-grow: 1;
         }
 
         .menu-item {
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 14px;
-            color: var(--text-muted);
+            gap: 14px;
+            padding: 12px 16px;
+            color: #b7e4c7;
             text-decoration: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            transition: background 0.2s, color 0.2s;
         }
 
         .menu-item:hover, .menu-item.active {
-            background-color: var(--bg-card);
-            color: var(--text-main);
-            border-left: 4px solid var(--accent-green);
+            background-color: var(--bg-sidebar-hover);
+            color: #ffffff;
         }
 
         .menu-item.logout-btn {
-            color: var(--accent-red);
-            margin-top: 20px;
-            border-left: none;
+            color: #f87171;
+            margin-top: auto;
         }
         .menu-item.logout-btn:hover {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--accent-red);
+            background-color: rgba(239, 68, 68, 0.15);
         }
 
-        .user-footer {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--accent-green);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* --- CONTEÚDO PRINCIPAL --- */
-        .main-content {
+        /* --- CONTEÚDO PRINCIPAL E TOPO --- */
+        .main-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-width: 0;
+            height: 100vh;
             overflow-y: auto;
         }
 
-        header {
+        .top-header {
             height: 70px;
-            background-color: var(--bg-sidebar);
+            background-color: #ffffff;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 40px;
+            padding: 0 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        /* --- NOTIFICAÇÕES --- */
-        .notification-container { position: relative; cursor: pointer; }
-        .bell-btn { background: none; border: none; color: var(--text-main); font-size: 20px; cursor: pointer; }
-        .badge { position: absolute; top: -5px; right: -5px; background-color: var(--accent-red); color: white; font-size: 11px; padding: 2px 6px; border-radius: 50%; }
-        
-        .dropdown-alerts {
-            position: absolute; right: 0; top: 35px; background-color: var(--bg-card); border: 1px solid var(--border-color); width: 300px; border-radius: 8px; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.3); z-index: 100;
+        .mobile-toggle {
+            display: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--primary-green);
         }
-        .dropdown-alerts h4 { padding: 12px; border-bottom: 1px solid var(--border-color); }
-        .alert-item { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border-color); display: flex; gap: 10px; }
 
-        /* --- ÁREAS / TELAS --- */
-        .app-view { padding: 40px; display: none; }
-        .app-view.active-view { display: block; }
-        h2 { margin-bottom: 25px; font-size: 28px; }
-
-        /* --- SEÇÃO DE ESTUFAS INDEPENDENTES --- */
-        .greenhouse-section {
-            background-color: var(--bg-sidebar);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-green);
         }
-        .greenhouse-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 15px;
+
+        .notification-wrapper { position: relative; }
+
+        .bell-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .card-header { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 13px; }
-        .card-value { font-size: 28px; font-weight: bold; }
-
-        /* --- GRÁFICO E LAYOUT --- */
-        .chart-container {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        /* --- AUTOMACAO POR ESTUFA --- */
-        .automation-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-
-        /* --- SWITCH DE MODO --- */
-        .mode-selector {
-            display: flex;
-            background-color: var(--bg-primary);
-            padding: 5px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .mode-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px;
+            justify-content: center;
+            color: var(--text-dark);
+            font-size: 18px;
             cursor: pointer;
-            border-radius: 6px;
-            font-weight: bold;
+            transition: background 0.2s;
         }
-        .mode-btn.active-mode {
-            background-color: var(--accent-green);
+        .bell-btn:hover { background: #e2e8f0; }
+
+        .bell-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: var(--danger-red);
             color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
         }
 
-        .time-configs {
+        .notifications-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 50px;
+            width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            z-index: 200;
+        }
+
+        .notifications-dropdown h4 {
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .notification-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+
+        /* --- VISÕES E TELAS --- */
+        .content-area {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .app-view { display: none; }
+        .app-view.active-view { display: block; }
+
+        .page-header { margin-bottom: 25px; }
+        .page-header h2 { font-size: 24px; color: var(--primary-green); }
+
+        /* --- SEÇÕES E CAIXAS DAS ESTUFAS --- */
+        .estufa-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+        }
+
+        .estufa-header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-green);
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--light-green);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sensors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .sensor-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            transition: border-color 0.2s;
+        }
+        .sensor-card:hover { border-color: var(--accent-green); }
+
+        .sensor-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reading-values {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .reading-val-item { text-align: center; }
+        .reading-val-item .val { font-size: 22px; font-weight: 700; }
+        .reading-val-item .lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+        /* --- GRÁFICOS --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        /* --- AUTOMAÇÃO E GERENCIAMENTO --- */
+        .auto-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active { background: #dcfce7; color: #15803d; }
+        .badge-inactive { background: #fee2e2; color: #b91c1c; }
+
+        .schedule-list {
+            list-style: none;
+            margin: 12px 0;
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .schedule-item {
+            font-size: 13px;
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .schedule-item:last-child { border-bottom: none; }
+
+        /* --- FORMULÁRIOS E BOTÕES --- */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 180px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 6px;
+            margin-bottom: 12px;
         }
-        .current-config-badge {
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--accent-green);
-            color: var(--accent-green);
-            padding: 8px;
-            border-radius: 6px;
+
+        label {
             font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary-green); }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+
+        .btn-primary { background-color: var(--primary-green); color: white; }
+        .btn-secondary { background-color: #64748b; color: white; }
+        .btn-danger { background-color: var(--danger-red); color: white; }
+        .btn-outline-danger { background: transparent; border: 1px solid var(--danger-red); color: var(--danger-red); }
+        .btn-outline-danger:hover { background: var(--danger-red); color: white; }
+
+        .item-list-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             margin-bottom: 10px;
         }
 
-        /* --- INTERRUPTORES --- */
-        .switch { position: relative; display: inline-block; width: 46px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--accent-green); }
-        input:checked + .slider:before { transform: translateX(24px); }
+        /* Mode selection toggle */
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .mode-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .mode-btn.active {
+            background: var(--light-green);
+            border-color: var(--accent-green);
+            color: var(--primary-green);
+        }
 
-        /* --- FORMULÁRIOS --- */
-        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-        label { color: var(--text-muted); font-size: 13px; }
-        input, select { background-color: var(--bg-primary); border: 1px solid var(--border-color); color: white; padding: 10px; border-radius: 6px; outline: none; }
-        input:focus, select:focus { border-color: var(--accent-green); }
-        .btn { background-color: var(--accent-green); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn:hover { background-color: #059669; }
+        /* RESPONSIVIDADE */
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                top: 0;
+                left: -100%;
+                height: 100vh;
+            }
+            .sidebar.mobile-open { left: 0; }
+            .mobile-toggle { display: block; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .content-area { padding: 15px; }
+            .main-wrapper { height: auto; }
+        }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
+    <!-- MENU LATERAL -->
+    <nav class="sidebar" id="sidebar">
         <div>
-            <div class="brand">
-                <i class="fa-solid fa-leaf"></i>
-                <span>GreenSaaS</span>
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-seedling"></i>
+                <span>AgroGreen</span>
             </div>
-            <ul class="menu-items">
-                <li class="menu-item active" onclick="switchView('dashboard')">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+            <ul class="sidebar-menu">
+                <li class="menu-item active" onclick="switchView('dashboard', this)">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
                 </li>
-                <li class="menu-item" onclick="switchView('automacao')">
-                    <i class="fa-solid fa-robot"></i> Automação
+                <li class="menu-item" onclick="switchView('automacao', this)">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Automação</span>
                 </li>
-                <li class="menu-item" onclick="switchView('cadastro')">
-                    <i class="fa-solid fa-user-gear"></i> Meus Dados
-                </li>
-                <li class="menu-item logout-btn" onclick="efetuarLogout()">
-                    <i class="fa-solid fa-right-from-bracket"></i> Sair do Sistema
+                <li class="menu-item" onclick="switchView('usuario', this)">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>Meus Dados</span>
                 </li>
             </ul>
         </div>
-        <div class="user-footer">
-            <div class="user-avatar" id="avatarName">G</div>
-            <div>
-                <p style="font-weight: bold;" id="userDisplay">Guilherme</p>
-                <p style="font-size: 12px; color: var(--text-muted);">Produtor Agrícola</p>
+        <div style="padding: 10px;">
+            <div class="menu-item logout-btn" onclick="efetuarLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Sair</span>
             </div>
         </div>
     </nav>
 
-    <main class="main-content">
-        <header>
-            <div class="view-title"><span style="color: var(--text-muted);">Painel Multi-Estufas</span></div>
-            <div class="notification-container" onclick="toggleAlerts()">
-                <button class="bell-btn"><i class="fa-solid fa-bell"></i><span class="badge">1</span></button>
-                <div class="dropdown-alerts" id="alertsMenu">
-                    <h4>Alertas Recentes</h4>
-                    <div class="alert-item" style="color: var(--accent-orange);">
-                        <i class="fa-solid fa-triangle-exclamation"></i><span>Estufa 2: Solo seco detectado.</span>
-                    </div>
+    <!-- WRAPPER PRINCIPAL -->
+    <div class="main-wrapper">
+        <!-- HEADER SUPERIOR -->
+        <header class="top-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="fa-solid fa-bars mobile-toggle" onclick="toggleSidebar()"></i>
+                <div class="header-title" id="page-title">Visão Geral do Sistema</div>
+            </div>
+            
+            <!-- NOTIFICAÇÕES -->
+            <div class="notification-wrapper">
+                <button class="bell-btn" onclick="toggleNotifications()">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="bell-badge" id="notif-count">2</span>
+                </button>
+                <div class="notifications-dropdown" id="notif-dropdown">
+                    <h4>Notificações Recentes</h4>
+                    <div class="notification-item"><i class="fa-solid fa-circle-info" style="color:var(--primary-green)"></i> Sistema sincronizado com a rota /dados.</div>
+                    <div class="notification-item"><i class="fa-solid fa-triangle-exclamation" style="color:var(--temp-color)"></i> Monitoramento de estufas ativo.</div>
                 </div>
             </div>
         </header>
 
-        <div id="view-dashboard" class="app-view active-view">
-            <h2>Visão Geral de Produção</h2>
+        <!-- ÁREA DE CONTEÚDO DAS ABAS -->
+        <main class="content-area">
 
-            <div class="greenhouse-section">
-                <div class="greenhouse-title" style="color: var(--accent-orange);">
-                    <i class="fa-solid fa-warehouse"></i> Estufa 01 - Tomate Cereja
+            <!-- ABA 1: DASHBOARD INTERATIVO -->
+            <div id="view-dashboard" class="app-view active-view">
+                <div class="page-header">
+                    <h2>Painel de Monitoramento de Estufas</h2>
                 </div>
-                <div class="metrics-grid">
-                    <div class="card">
-                        <div class="card-header"><span>Temperatura</span><i class="fa-solid fa-temperature-high"></i></div>
-                        <div class="card-value"><span id="e1-temp">26.2</span>°C</div>
+
+                <!-- 1.1 CAIXAS DAS ESTUFAS COM SENSORES E LEITURAS RECENTES -->
+                <h3 style="margin-bottom: 15px; color: var(--primary-green);"><i class="fa-solid fa-temperature-half"></i> Leituras Atuais</h3>
+                <div id="container-estufas-leituras">
+                    <p style="color: var(--text-muted);">Carregando dados do servidor...</p>
+                </div>
+
+                <!-- 1.2 CAIXAS DAS ESTUFAS COM OS GRÁFICOS DE CADA SENSOR -->
+                <h3 style="margin: 30px 0 15px 0; color: var(--primary-green);"><i class="fa-solid fa-chart-line"></i> Histórico por Sensor</h3>
+                <div id="container-estufas-graficos">
+                    <!-- Gráficos gerados dinamicamente via JS -->
+                </div>
+            </div>
+
+            <!-- ABA 2: AUTOMAÇÃO E GERENCIAMENTO -->
+            <div id="view-automacao" class="app-view">
+                <div class="page-header">
+                    <h2>Automação e Configurações de Estufas</h2>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 25px;">
+                    <!-- GERENCIAMENTO DOS SENSORES -->
+                    <div class="estufa-box">
+                        <div class="estufa-header-title">
+                            <span><i class="fa-solid fa-microchip"></i> Controle de Sensores e Irrigação</span>
+                        </div>
+                        <div id="container-gestao-sensores">
+                            <!-- Gerado dinamicamente via JS -->
+                        </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header"><span>Umidade do Ar</span><i class="fa-solid fa-droplet"></i></div>
-                        <div class="card-value"><span id="e1-umi">58</span>%</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span>Umidade do Solo</span><i class="fa-solid fa-seedling"></i></div>
-                        <div class="card-value">71%</div>
+
+                    <!-- GERENCIAMENTO DAS ESTUFAS -->
+                    <div class="estufa-box">
+                        <div class="estufa-header-title">
+                            <span><i class="fa-solid fa-warehouse"></i> Gestão de Estufas</span>
+                        </div>
+                        <div id="container-gestao-estufas">
+                            <!-- Gerado dinamicamente via JS -->
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="greenhouse-section">
-                <div class="greenhouse-title" style="color: var(--accent-purple);">
-                    <i class="fa-solid fa-warehouse"></i> Estufa 02 - Alface Hidropônica
+            <!-- ABA 3: MEUS DADOS / ATUALIZAÇÃO CADASTRAL -->
+            <div id="view-usuario" class="app-view">
+                <div class="page-header">
+                    <h2>Atualização Cadastral</h2>
                 </div>
-                <div class="metrics-grid">
-                    <div class="card">
-                        <div class="card-header"><span>Temperatura</span><i class="fa-solid fa-temperature-high"></i></div>
-                        <div class="card-value"><span id="e2-temp">24.5</span>°C</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span>Umidade do Ar</span><i class="fa-solid fa-droplet"></i></div>
-                        <div class="card-value"><span id="e2-umi">64</span>%</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header"><span>Umidade do Solo</span><i class="fa-solid fa-seedling"></i></div>
-                        <div class="card-value">83%</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="chart-container">
-                <h3>Comparativo de Sensores por Estufa</h3>
-                <canvas id="multiEstufaChart" height="100"></canvas>
-            </div>
-        </div>
-
-        <div id="view-automacao" class="app-view">
-            <h2>Configuração de Rega e Automação</h2>
-            <div class="automation-grid">
-                
-                <div class="card">
-                    <h3 style="color: var(--accent-orange); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Estufa 01</h3>
-                    <div class="current-config-badge">
-                        <i class="fa-solid fa-clock"></i> Configuração Atual: <strong>Automática (06:00 - 15min)</strong>
-                    </div>
-
-                    <div class="mode-selector">
-                        <button class="mode-btn active-mode" id="e1-btn-auto" onclick="setModo(1, 'auto')">Automático</button>
-                        <button class="mode-btn" id="e1-btn-manual" onclick="setModo(1, 'manual')">Manual</button>
-                    </div>
-
-                    <div id="e1-painel-auto" class="time-configs">
+                <div class="estufa-box" style="max-width: 600px;">
+                    <form id="form-usuario" onsubmit="salvarPerfilUsuario(event)">
                         <div class="form-group">
-                            <label>Horário Prévio para Regar</label>
-                            <input type="time" value="06:00">
+                            <label><i class="fa-solid fa-user"></i> Nome do Usuário</label>
+                            <input type="text" id="user-nome" required>
                         </div>
                         <div class="form-group">
-                            <label>Duração (minutos)</label>
-                            <input type="number" value="15" min="1">
-                        </div>
-                        <button class="btn" onclick="salvarConfig(1)">Atualizar Horário</button>
-                    </div>
-
-                    <div id="e1-painel-manual" style="display: none; padding: 15px 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Ligar Bomba Agora:</span>
-                            <label class="switch">
-                                <input type="checkbox" onchange="alert('Sinal manual enviado para a Bomba da Estufa 01!')">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3 style="color: var(--accent-purple); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Estufa 02</h3>
-                    <div class="current-config-badge">
-                        <i class="fa-solid fa-clock"></i> Configuração Atual: <strong>Manual (Desligada)</strong>
-                    </div>
-
-                    <div class="mode-selector">
-                        <button class="mode-btn" id="e2-btn-auto" onclick="setModo(2, 'auto')">Automático</button>
-                        <button class="mode-btn active-mode" id="e2-btn-manual" onclick="setModo(2, 'manual')">Manual</button>
-                    </div>
-
-                    <div id="e2-painel-auto" class="time-configs" style="display: none;">
-                        <div class="form-group">
-                            <label>Horário Prévio para Regar</label>
-                            <input type="time" value="18:30">
+                            <label><i class="fa-solid fa-phone"></i> Contato / Telefone</label>
+                            <input type="text" id="user-contato" required>
                         </div>
                         <div class="form-group">
-                            <label>Duração (minutos)</label>
-                            <input type="number" value="10" min="1">
+                            <label><i class="fa-solid fa-location-dot"></i> Endereço</label>
+                            <input type="text" id="user-endereco" required>
                         </div>
-                        <button class="btn" onclick="salvarConfig(2)">Atualizar Horário</button>
-                    </div>
-
-                    <div id="e2-painel-manual" style="padding: 15px 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Ligar Bomba Agora:</span>
-                            <label class="switch">
-                                <input type="checkbox" onchange="alert('Sinal manual enviado para a Bomba da Estufa 02!')">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
+                        </button>
+                    </form>
                 </div>
-
             </div>
-        </div>
 
-        <div id="view-cadastro" class="app-view">
-            <h2>Meus Dados</h2>
-            <div class="card" style="max-width: 500px;">
-                <h3>Atualizar Cadastro</h3>
-                <form onsubmit="event.preventDefault(); alert('Dados alterados com sucesso!');">
-                    <div class="form-group">
-                        <label>Nome de Usuário</label>
-                        <input type="text" value="Guilherme">
-                    </div>
-                    <div class="form-group">
-                        <label>E-mail</label>
-                        <input type="email" value="guilherme@saasestufas.com">
-                    </div>
-                    <button class="btn" type="submit">Salvar Modificações</button>
-                </form>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
+    <!-- SCRIPT DE NAVEGAÇÃO E LÓGICA DE DADOS -->
     <script>
-        // --- NAVEGAÇÃO ENTRE AS TELAS ---
-        function switchView(viewName) {
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active-view'));
-            event.currentTarget.classList.add('active');
-            document.getElementById(`view-${viewName}`).classList.add('active-view');
-        }
+        // Objeto em memória contendo a resposta completa do POST /dados
+        let SERVER_DATA = {
+            usuario: {},
+            estufas: [],
+            sensores: [],
+            dados: []
+        };
 
-        // --- CONTROLE DE ALERTA ---
-        function toggleAlerts() {
-            const m = document.getElementById('alertsMenu');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        }
+        // Estado do modo de irrigação selecionado por sensor (mantem 'Manual' ou 'Automatico')
+        const modoIrrigacaoPorSensor = {};
 
-        // --- ABA DE SELEÇÃO DE MODO DE AUTOMAÇÃO ---
-        function setModo(estufaId, modo) {
-            const autoBtn = document.getElementById(`e${estufaId}-btn-auto`);
-            const manualBtn = document.getElementById(`e${estufaId}-btn-manual`);
-            const painelAuto = document.getElementById(`e${estufaId}-painel-auto`);
-            const painelManual = document.getElementById(`e${estufaId}-painel-manual`);
+        // Instâncias do Chart.js
+        const chartInstances = {};
 
-            if (modo === 'auto') {
-                autoBtn.classList.add('active-mode');
-                manualBtn.classList.remove('active-mode');
-                painelAuto.style.display = 'flex';
-                painelManual.style.display = 'none';
-            } else {
-                manualBtn.classList.add('active-mode');
-                autoBtn.classList.remove('active-mode');
-                painelAuto.style.display = 'none';
-                painelManual.style.display = 'block';
-            }
-        }
-
-        function salvarConfig(id) {
-            alert(`Novo horário prévio de rega configurado para a Estufa 0${id}!`);
-        }
-
-        // --- FUNÇÃO DE LOGOUT ---
-        function efetuartLogout() {
-            if(confirm("Tem certeza que deseja sair do sistema?")) {
-                // Aqui removemos o cookie no Front mudando a data de validade dele
-                document.cookie = "token_saas=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                // Redireciona de volta para a tela de Login
-                window.location.href = "/login.html"; 
-            }
-        }
-
-        // --- GRÁFICO MULTI-CORES POR ESTUFA (Chart.js) ---
-        const ctx = document.getElementById('multiEstufaChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['15:00', '16:00', '17:00', '18:00', '19:00'],
-                datasets: [
-                    // Estufa 1 - Laranja (Quente) e Amarelo
-                    {
-                        label: 'Estufa 1: Temp (°C)',
-                        data: [25.1, 26.3, 26.2, 25.8, 25.0],
-                        borderColor: '#f59e0b', // Laranja
-                        backgroundColor: 'transparent',
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Estufa 1: Umidade (%)',
-                        data: [59, 57, 58, 60, 62],
-                        borderColor: '#fbbf24', // Amarelo
-                        backgroundColor: 'transparent',
-                        tension: 0.2
-                    },
-                    // Estufa 2 - Roxa e Azul
-                    {
-                        label: 'Estufa 2: Temp (°C)',
-                        data: [23.9, 24.2, 24.5, 24.1, 23.8],
-                        borderColor: '#a855f7', // Roxo
-                        backgroundColor: 'transparent',
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Estufa 2: Umidade (%)',
-                        data: [66, 65, 64, 66, 68],
-                        borderColor: '#3b82f6', // Azul
-                        backgroundColor: 'transparent',
-                        tension: 0.2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { labels: { color: '#f3f4f6', font: { size: 11 } } } },
-                scales: {
-                    x: { grid: { color: '#2e3d54' }, ticks: { color: '#9ca3af' } },
-                    y: { grid: { color: '#2e3d54' }, ticks: { color: '#9ca3af' } }
-                }
-            }
+        // --- INICIALIZAÇÃO DA PÁGINA ---
+        window.addEventListener('DOMContentLoaded', () => {
+            carregarDadosDoServidor();
         });
 
-        // Simulação de Dados Dinâmicos Variados
-        setInterval(() => {
-            document.getElementById('e1-temp').innerText = (25.5 + Math.random()).toFixed(1);
-            document.getElementById('e2-temp').innerText = (23.8 + Math.random()).toFixed(1);
-        }, 4000);
+        // --- REQUISIÇÃO ÚNICA VIA POST PARA /dados ---
+        async function carregarDadosDoServidor() {
+            try {
+                const response = await fetch('/dados', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao comunicar com a rota /dados');
+                }
+
+                SERVER_DATA = await response.json();
+                
+                // Inicializar modo de irrigação padrão para cada sensor se não existir
+                SERVER_DATA.sensores.forEach(s => {
+                    if (!modoIrrigacaoPorSensor[s._id]) {
+                        modoIrrigacaoPorSensor[s._id] = 'Automatico';
+                    }
+                });
+
+                renderizarTodoOSistema();
+
+            } catch (error) {
+                console.warn('Servidor offline ou rota indisponível. Usando JSON de fallback.', error);
+                /*
+                // JSON de backup equivalente ao formato original
+                SERVER_DATA = {
+                    "usuario": { "nome": "usuario1", "contato": "8763237899232", "endereco": "endereco1" },
+                    "estufas": [
+                        { "_id": "estufaid1", "nome": "Estufa 1", "localizasao": "endereco1", "usuarioId": "usuarioid", "plantasao": "Melão" },
+                        { "_id": "estufaid2", "nome": "Estufa 2", "localizasao": "endereco2", "usuarioId": "usuarioid", "plantasao": "Abacate" }
+                    ],
+                    "sensores": [
+                        { 
+                            "_id": "idsensor1", 
+                            "nome": "sensor estufa1", 
+                            "estufaId": "estufaid1", 
+                            "codigo_serial": "AA:BB:CC:DD", 
+                            "status": "Inativo", 
+                            "irigando": "Desativado", 
+                            "agendamentos": [
+                                { "_id": "idagendamento1", "sensorId": "idsensor1", "horario_regar": "8", "durasao_regar": "60", "tipo_regar": "Automatico" }
+                            ] 
+                        },
+                        { 
+                            "_id": "idsensor2", 
+                            "nome": "sensor estufa2", 
+                            "estufaId": "estufaid2", 
+                            "codigo_serial": "AA:BB:CC:DE", 
+                            "status": "Inativo", 
+                            "irigando": "Desativado", 
+                            "agendamentos": [] 
+                        }
+                    ],
+                    "dados": [
+                        { "id": "d1", "codigo_serial": "AA:BB:CC:DD", "id_sensor": "idsensor1", "temperatura": "34.00", "umidade": "90.00", "data": "2026-07-24T02:09:09.884Z" },
+                        { "id": "d2", "codigo_serial": "AA:BB:CC:DE", "id_sensor": "idsensor2", "temperatura": "12.00", "umidade": "67.00", "data": "2026-07-24T18:53:05.353Z" }
+                    ]
+                };
+                */
+                SERVER_DATA.sensores.forEach(s => {
+                    if (!modoIrrigacaoPorSensor[s._id]) {
+                        modoIrrigacaoPorSensor[s._id] = 'Automatico';
+                    }
+                });
+
+                renderizarTodoOSistema();
+            }
+        }
+
+        // --- RENDERIZAÇÃO CENTRAL ---
+        function renderizarTodoOSistema() {
+            renderizarDashboardLeituras();
+            renderizarDashboardGraficos();
+            renderizarAutomacaoEGerenciamento();
+            renderizarPerfilUsuario();
+        }
+
+        /* -------------------------------------------------------------
+           1. DASHBOARD: LEITURAS E GRÁFICOS
+        ------------------------------------------------------------- */
+        function renderizarDashboardLeituras() {
+            const container = document.getElementById('container-estufas-leituras');
+            container.innerHTML = '';
+
+            if (SERVER_DATA.estufas.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted)">Nenhuma estufa encontrada.</p>';
+                return;
+            }
+
+            SERVER_DATA.estufas.forEach(estufa => {
+                const estufaBox = document.createElement('div');
+                estufaBox.className = 'estufa-box';
+
+                const sensoresEstufa = SERVER_DATA.sensores.filter(s => s.estufaId === estufa._id);
+
+                let sensoresHtml = '';
+                if (sensoresEstufa.length === 0) {
+                    sensoresHtml = '<p style="font-size:13px; color:var(--text-muted);">Nenhum sensor associado a esta estufa.</p>';
+                } else {
+                    sensoresHtml = '<div class="sensors-grid">';
+                    sensoresEstufa.forEach(sensor => {
+                        const leituraRecente = obterDadoMaisRecenteDoSensor(sensor._id, sensor.codigo_serial);
+                        
+                        const temp = leituraRecente ? `${parseFloat(leituraRecente.temperatura).toFixed(1)}°C` : '--';
+                        const umi = leituraRecente ? `${parseFloat(leituraRecente.umidade).toFixed(1)}%` : '--';
+                        const dataHora = leituraRecente ? new Date(leituraRecente.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Sem dados';
+
+                        sensoresHtml += `
+                            <div class="sensor-card">
+                                <div class="sensor-title">
+                                    <span><i class="fa-solid fa-microchip"></i> ${sensor.nome}</span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">${dataHora}</span>
+                                </div>
+                                <div class="reading-values">
+                                    <div class="reading-val-item">
+                                        <div class="val" style="color: var(--temp-color);">${temp}</div>
+                                        <div class="lbl">Temperatura</div>
+                                    </div>
+                                    <div class="reading-val-item">
+                                        <div class="val" style="color: var(--umi-color);">${umi}</div>
+                                        <div class="lbl">Umidade</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    sensoresHtml += '</div>';
+                }
+
+                estufaBox.innerHTML = `
+                    <div class="estufa-header-title">
+                        <span><i class="fa-solid fa-warehouse"></i> ${estufa.nome} (${estufa.plantasao || 'Sem cultivo'})</span>
+                        <span style="font-size:12px; font-weight:normal; color:var(--text-muted)"><i class="fa-solid fa-location-dot"></i> ${estufa.localizasao || 'Sem localização'}</span>
+                    </div>
+                    ${sensoresHtml}
+                `;
+
+                container.appendChild(estufaBox);
+            });
+        }
+
+        function renderizarDashboardGraficos() {
+            const container = document.getElementById('container-estufas-graficos');
+            container.innerHTML = '';
+
+            SERVER_DATA.estufas.forEach(estufa => {
+                const estufaBox = document.createElement('div');
+                estufaBox.className = 'estufa-box';
+
+                const sensoresEstufa = SERVER_DATA.sensores.filter(s => s.estufaId === estufa._id);
+
+                if (sensoresEstufa.length === 0) return;
+
+                let chartsGridHtml = `<div class="charts-grid" id="charts-grid-${estufa._id}"></div>`;
+                
+                estufaBox.innerHTML = `
+                    <div class="estufa-header-title">
+                        <span><i class="fa-solid fa-chart-area"></i> ${estufa.nome} - Gráficos dos Sensores</span>
+                    </div>
+                    ${chartsGridHtml}
+                `;
+
+                container.appendChild(estufaBox);
+
+                const gridElem = document.getElementById(`charts-grid-${estufa._id}`);
+
+                sensoresEstufa.forEach(sensor => {
+                    const canvasId = `chart-canvas-${sensor._id}`;
+                    const chartCard = document.createElement('div');
+                    chartCard.className = 'chart-card';
+                    chartCard.innerHTML = `
+                        <div style="font-size:14px; font-weight:600; margin-bottom:10px; color:var(--text-dark)">
+                            Sensor: ${sensor.nome} (${sensor.codigo_serial})
+                        </div>
+                        <canvas id="${canvasId}" height="180"></canvas>
+                    `;
+                    gridElem.appendChild(chartCard);
+
+                    setTimeout(() => criarOuAtualizarGraficoSensor(canvasId, sensor._id, sensor.codigo_serial), 50);
+                });
+            });
+        }
+
+        function criarOuAtualizarGraficoSensor(canvasId, sensorId, codigoSerial) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const leiturasSensor = SERVER_DATA.dados
+                .filter(d => d.id_sensor === sensorId || d.codigo_serial === codigoSerial)
+                .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            const labels = leiturasSensor.map(l => new Date(l.data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+            const temps = leiturasSensor.map(l => parseFloat(l.temperatura));
+            const umids = leiturasSensor.map(l => parseFloat(l.umidade));
+
+            if (chartInstances[canvasId]) {
+                chartInstances[canvasId].destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            chartInstances[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.length ? labels : ['Sem Registros'],
+                    datasets: [
+                        { label: 'Temperatura (°C)', data: temps.length ? temps : [0], borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.1)', tension: 0.3, fill: true },
+                        { label: 'Umidade (%)', data: umids.length ? umids : [0], borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.1)', tension: 0.3, fill: true }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: { color: '#f1f5f9' } }
+                    }
+                }
+            });
+        }
+
+        /* -------------------------------------------------------------
+           2. AUTOMAÇÃO E GERENCIAMENTO (SENSORES E ESTUFAS)
+        ------------------------------------------------------------- */
+        function renderizarAutomacaoEGerenciamento() {
+            // --- LISTAGEM DE SENSORES ---
+            const containerSensores = document.getElementById('container-gestao-sensores');
+            containerSensores.innerHTML = '';
+
+            if (SERVER_DATA.sensores.length === 0) {
+                containerSensores.innerHTML = '<p style="color:var(--text-muted)">Nenhum sensor cadastrado.</p>';
+            } else {
+                SERVER_DATA.sensores.forEach(sensor => {
+                    const card = document.createElement('div');
+                    card.className = 'auto-card';
+
+                    const isStatusAtivo = sensor.status === 'Ativo' || sensor.status === 'Ativado';
+                    const statusSensorBadge = isStatusAtivo ? 'badge-active' : 'badge-inactive';
+                    
+                    const isIrrigando = sensor.irigando === 'Ativado' || sensor.irigando === 'Ativo';
+                    const statusIrrigacaoBadge = isIrrigando ? 'badge-active' : 'badge-inactive';
+
+                    const modoAtual = modoIrrigacaoPorSensor[sensor._id] || 'Automatico';
+
+                    // Painel dinâmico conforme o modo escolhido (Manual vs Automático)
+                    let painelIrrigacaoHtml = '';
+
+                    if (modoAtual === 'Manual') {
+                        painelIrrigacaoHtml = `
+                            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-color); margin-top:10px;">
+                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">
+                                    Modo Manual: Acione a bomba d'água de forma imediata.
+                                </p>
+                                <button class="btn ${isIrrigando ? 'btn-danger' : 'btn-primary'}" onclick="toggleBombaManual('${sensor._id}')">
+                                    <i class="fa-solid ${isIrrigando ? 'fa-power-off' : 'fa-faucet-drip'}"></i> 
+                                    ${isIrrigando ? 'Desligar Bomba' : 'Ligar Bomba'}
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        // Modo Automático: Lista de agendamentos + formulário de criação
+                        let listaAgendamentosHtml = '';
+                        if (sensor.agendamentos && sensor.agendamentos.length > 0) {
+                            listaAgendamentosHtml = '<ul class="schedule-list">';
+                            sensor.agendamentos.forEach(ag => {
+                                listaAgendamentosHtml += `
+                                    <li class="schedule-item">
+                                        <span>
+                                            <i class="fa-regular fa-clock" style="color:var(--primary-green)"></i> 
+                                            Início: <strong>${ag.horario_regar}h</strong> | Duração: <strong>${ag.durasao_regar} min</strong>
+                                        </span>
+                                        <button class="btn btn-outline-danger" style="padding:2px 8px; font-size:11px;" onclick="deletarAgendamento('${sensor._id}', '${ag._id}')">
+                                            <i class="fa-solid fa-trash"></i> Excluir
+                                        </button>
+                                    </li>
+                                `;
+                            });
+                            listaAgendamentosHtml += '</ul>';
+                        } else {
+                            listaAgendamentosHtml = '<p style="font-size:12px; color:var(--text-muted); margin: 10px 0;">Nenhuma regra automática cadastrada para este sensor.</p>';
+                        }
+
+                        painelIrrigacaoHtml = `
+                            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-color); margin-top:10px;">
+                                <label style="font-size:13px; font-weight:600;">Regras de Agendamento:</label>
+                                ${listaAgendamentosHtml}
+
+                                <!-- FORMULÁRIO DE CRIAR NOVO AGENDAMENTO -->
+                                <form onsubmit="adicionarAgendamento(event, '${sensor._id}')" class="form-row" style="align-items:flex-end; border-top:1px dashed var(--border-color); padding-top:12px; margin-top:10px;">
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label style="font-size:11px;">Hora Início (0-23h)</label>
+                                        <input type="number" min="0" max="23" id="hora-${sensor._id}" required placeholder="Ex: 8">
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label style="font-size:11px;">Duração (min)</label>
+                                        <input type="number" min="1" id="duracao-${sensor._id}" required placeholder="Ex: 60">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary" style="padding:8px 14px; font-size:12px;">
+                                        <i class="fa-solid fa-plus"></i> Criar Agendamento
+                                    </button>
+                                </form>
+                            </div>
+                        `;
+                    }
+
+                    card.innerHTML = `
+                        <!-- CABEÇALHO DO SENSOR -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                            <div>
+                                <h4 style="font-size:16px; color:var(--primary-green);"><i class="fa-solid fa-microchip"></i> ${sensor.nome}</h4>
+                                <span style="font-size:12px; color:var(--text-muted);">Código Serial: <code>${sensor.codigo_serial}</code></span>
+                            </div>
+                            <button class="btn btn-outline-danger" style="padding:5px 10px; font-size:12px;" onclick="deletarSensor('${sensor._id}')">
+                                <i class="fa-solid fa-trash"></i> Deletar Sensor
+                            </button>
+                        </div>
+
+                        <!-- PAINEL DE STATUS -->
+                        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:15px; background:#ffffff; padding:10px; border-radius:6px; border:1px solid var(--border-color);">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="font-size:12px;">Status Sensor:</label>
+                                <select onchange="alterarStatusSensor('${sensor._id}', this.value)" style="padding:4px 8px; font-size:12px;">
+                                    <option value="Ativado" ${isStatusAtivo ? 'selected' : ''}>Ativado</option>
+                                    <option value="Inativo" ${!isStatusAtivo ? 'selected' : ''}>Inativo</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="font-size:12px;">Status Irrigação:</label>
+                                <span class="badge ${statusIrrigacaoBadge}">${sensor.irigando}</span>
+                            </div>
+                        </div>
+
+                        <!-- BOTÕES DE MODO DE IRRIGAÇÃO (AUTOMÁTICO / MANUAL) -->
+                        <label style="font-size:13px; font-weight:600;">Modo de Irrigação:</label>
+                        <div class="mode-selector">
+                            <button class="mode-btn ${modoAtual === 'Automatico' ? 'active' : ''}" onclick="alterarModoIrrigacao('${sensor._id}', 'Automatico')">
+                                <i class="fa-solid fa-robot"></i> Automático
+                            </button>
+                            <button class="mode-btn ${modoAtual === 'Manual' ? 'active' : ''}" onclick="alterarModoIrrigacao('${sensor._id}', 'Manual')">
+                                <i class="fa-solid fa-hand"></i> Manual
+                            </button>
+                        </div>
+
+                        <!-- CONTEÚDO DINÂMICO CONFORME MODO -->
+                        ${painelIrrigacaoHtml}
+                    `;
+
+                    containerSensores.appendChild(card);
+                });
+            }
+
+            // --- LISTAGEM DE ESTUFAS ---
+            const containerEstufas = document.getElementById('container-gestao-estufas');
+            containerEstufas.innerHTML = '';
+
+            if (SERVER_DATA.estufas.length === 0) {
+                containerEstufas.innerHTML = '<p style="color:var(--text-muted)">Nenhuma estufa cadastrada.</p>';
+            } else {
+                SERVER_DATA.estufas.forEach(estufa => {
+                    const row = document.createElement('div');
+                    row.className = 'item-list-row';
+                    row.innerHTML = `
+                        <div>
+                            <strong>${estufa.nome}</strong> 
+                            <span style="font-size:13px; color:var(--text-muted); display:block;">
+                                Plantação: ${estufa.plantasao || 'Não informada'} | Local: ${estufa.localizasao || 'Não informada'}
+                            </span>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn btn-secondary" style="padding:6px 10px; font-size:12px;" onclick="editarEstufa('${estufa._id}')">
+                                <i class="fa-solid fa-pen"></i> Alterar
+                            </button>
+                            <button class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="deletarEstufa('${estufa._id}')">
+                                <i class="fa-solid fa-trash"></i> Deletar
+                            </button>
+                        </div>
+                    `;
+                    containerEstufas.appendChild(row);
+                });
+            }
+        }
+
+        /* -------------------------------------------------------------
+           FUNÇÕES DE AÇÃO DA AUTOMAÇÃO (SENSORES & AGENDAMENTOS)
+        ------------------------------------------------------------- */
+        function alterarModoIrrigacao(sensorId, modo) {
+            modoIrrigacaoPorSensor[sensorId] = modo;
+            renderizarAutomacaoEGerenciamento();
+        }
+
+        function toggleBombaManual(sensorId) {
+            const sensor = SERVER_DATA.sensores.find(s => s._id === sensorId);
+            if (sensor) {
+                const isIrrigando = sensor.irigando === 'Ativado' || sensor.irigando === 'Ativo';
+                sensor.irigando = isIrrigando ? 'Desativado' : 'Ativado';
+                alert(`Bomba de irrigação do sensor "${sensor.nome}" foi ${sensor.irigando.toLowerCase()}.`);
+                renderizarTodoOSistema();
+            }
+        }
+
+        function alterarStatusSensor(sensorId, novoStatus) {
+            const sensor = SERVER_DATA.sensores.find(s => s._id === sensorId);
+            if (sensor) {
+                sensor.status = novoStatus;
+                alert(`Status do sensor "${sensor.nome}" alterado para ${novoStatus}.`);
+                renderizarTodoOSistema();
+            }
+        }
+
+        function adicionarAgendamento(event, sensorId) {
+            event.preventDefault();
+            const hora = document.getElementById(`hora-${sensorId}`).value;
+            const duracao = document.getElementById(`duracao-${sensorId}`).value;
+
+            const sensor = SERVER_DATA.sensores.find(s => s._id === sensorId);
+            if (sensor) {
+                if (!sensor.agendamentos) sensor.agendamentos = [];
+                
+                sensor.agendamentos.push({
+                    _id: 'ag_' + Date.now(),
+                    sensorId: sensorId,
+                    horario_regar: hora,
+                    durasao_regar: duracao,
+                    tipo_regar: 'Automatico'
+                });
+
+                alert('Novo agendamento criado com sucesso!');
+                renderizarTodoOSistema();
+            }
+        }
+
+        function deletarAgendamento(sensorId, agendamentoId) {
+            if (confirm('Deseja excluir este agendamento de irrigação?')) {
+                const sensor = SERVER_DATA.sensores.find(s => s._id === sensorId);
+                if (sensor && sensor.agendamentos) {
+                    sensor.agendamentos = sensor.agendamentos.filter(ag => ag._id !== agendamentoId);
+                    alert('Agendamento removido com sucesso.');
+                    renderizarTodoOSistema();
+                }
+            }
+        }
+
+        function deletarSensor(sensorId) {
+            if (confirm('Tem certeza que deseja deletar este sensor permanentemente?')) {
+                SERVER_DATA.sensores = SERVER_DATA.sensores.filter(s => s._id !== sensorId);
+                alert('Sensor removido!');
+                renderizarTodoOSistema();
+            }
+        }
+
+        function editarEstufa(estufaId) {
+            const estufa = SERVER_DATA.estufas.find(e => e._id === estufaId);
+            if (estufa) {
+                const novoNome = prompt('Novo nome da Estufa:', estufa.nome);
+                const novaPlantasao = prompt('Nova Plantação:', estufa.plantasao || '');
+                const novaLocalizacao = prompt('Nova Localização:', estufa.localizasao || '');
+
+                if (novoNome !== null) estufa.nome = novoNome;
+                if (novaPlantasao !== null) estufa.plantasao = novaPlantasao;
+                if (novaLocalizacao !== null) estufa.localizasao = novaLocalizacao;
+
+                alert('Estufa atualizada!');
+                renderizarTodoOSistema();
+            }
+        }
+
+        function deletarEstufa(estufaId) {
+            if (confirm('Tem certeza que deseja deletar esta estufa? Todos os sensores associados perderão a referência.')) {
+                SERVER_DATA.estufas = SERVER_DATA.estufas.filter(e => e._id !== estufaId);
+                alert('Estufa deletada!');
+                renderizarTodoOSistema();
+            }
+        }
+
+        /* -------------------------------------------------------------
+           3. MEUS DADOS / PERFIL
+        ------------------------------------------------------------- */
+        function renderizarPerfilUsuario() {
+            if (SERVER_DATA.usuario) {
+                document.getElementById('user-nome').value = SERVER_DATA.usuario.nome || '';
+                document.getElementById('user-contato').value = SERVER_DATA.usuario.contato || '';
+                document.getElementById('user-endereco').value = SERVER_DATA.usuario.endereco || '';
+            }
+        }
+
+        function salvarPerfilUsuario(event) {
+            event.preventDefault();
+            SERVER_DATA.usuario.nome = document.getElementById('user-nome').value;
+            SERVER_DATA.usuario.contato = document.getElementById('user-contato').value;
+            SERVER_DATA.usuario.endereco = document.getElementById('user-endereco').value;
+
+            alert('Dados cadastrais atualizados com sucesso!');
+        }
+
+        /* -------------------------------------------------------------
+           FUNÇÕES AUXILIARES E NAVEGAÇÃO
+        ------------------------------------------------------------- */
+        function obterDadoMaisRecenteDoSensor(sensorId, codigoSerial) {
+            const leituras = SERVER_DATA.dados.filter(d => d.id_sensor === sensorId || d.codigo_serial === codigoSerial);
+            if (leituras.length === 0) return null;
+
+            return leituras.reduce((maisRecente, atual) => {
+                return new Date(atual.data) > new Date(maisRecente.data) ? atual : maisRecente;
+            });
+        }
+
+        function switchView(viewName, menuElement) {
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active-view'));
+
+            if (menuElement) menuElement.classList.add('active');
+            document.getElementById(`view-${viewName}`).classList.add('active-view');
+
+            const titles = {
+                'dashboard': 'Visão Geral do Sistema',
+                'automacao': 'Central de Automação',
+                'usuario': 'Meus Dados Cadastrais'
+            };
+            document.getElementById('page-title').innerText = titles[viewName] || '';
+
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('mobile-open');
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function efetuarLogout() {
+            if (confirm('Deseja realmente sair do sistema?')) {
+                window.location.reload();
+            }
+        }
     </script>
 </body>
 </html>
