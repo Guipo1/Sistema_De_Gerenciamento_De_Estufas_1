@@ -47,8 +47,8 @@ A arquitetura do sistema é dividida em módulos independentes, desacoplados e c
 ## Como rodar o projeto
 Para executar o projeto, é necessário certificar-se de que o Docker já esteja instalado. Após, execute os comandos a seguir:
 ```bash
-git clone https://github.com/Guipo1/Sistema_De_Gerenciamento_De_Estufas_1.git
-cd Sistema_De_Gerenciamento_De_Estufas_1
+git clone https://github.com/Guipo1/AgroGreen.git
+cd AgroGreen
 docker compose up -d
 ```
 
