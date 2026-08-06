@@ -23,7 +23,7 @@ const char* chaveSecreta = "";
 
 EthernetClient client;
 
-// Controle de tempo para tentativa de reconexão
+
 unsigned long ultimatenatativa = 0;
 const unsigned long intervaloReconexao = 2000; // 2 segundos entre tentativas
 
@@ -58,7 +58,7 @@ bool mqttConnect() {
   writeMQTTString(mqttUser);
   writeMQTTString(mqttPass);
 
-  // MAIOR TOLERÂNCIA: Aguarda até 5 segundos pela resposta do login (CONNACK)
+ 
   unsigned long start = millis();
   while (client.connected() && millis() - start < 5000) {
     if (client.available() >= 4) {
@@ -111,7 +111,7 @@ void mqttPublish(const char* topic, const char* payload) {
 
 void tentarConectar() {
   Serial.print(F("Limpando sockets antigos... "));
-  client.stop(); // LIMPEZA OBRIGATÓRIA: Garante que o socket do W5100 seja liberado
+  client.stop(); 
   delay(100);
 
   Serial.print(F("Conectando ao Broker... "));
@@ -122,7 +122,7 @@ void tentarConectar() {
 
       // 1. Inscreve no tópico de status
       mqttSubscribe(subTopic);
-      delay(300); // Pausa para o Broker processar a inscrição
+      delay(300); 
 
       // 2. Prepara e envia o JSON
       char jsonBuffer[128];
@@ -135,7 +135,7 @@ void tentarConectar() {
       Serial.println(jsonBuffer);
       Serial.println(F("Aguardando resposta do servidor (Timeout 5s)..."));
 
-      // 3. ESPERA ATIVA PELA RESPOSTA: Trava aqui até chegar algum byte ou estourar 5 segundos
+    
       unsigned long inicioEspera = millis();
       bool respostaChegou = false;
 
@@ -144,7 +144,7 @@ void tentarConectar() {
           respostaChegou = true;
           break; // Dados chegaram! Sai do loop de espera e vai ler abaixo
         }
-        delay(10); // Pequeno descanso para o processador
+        delay(10); 
       }
 
       if (!respostaChegou) {
@@ -165,14 +165,13 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
 
-  // OBRIGATÓRIO: Desativa o leitor SD (Pino 4)
+
   pinMode(4, OUTPUT);
   digitalWrite(4, HIGH);
 
   Serial.println(F("Iniciando Ethernet..."));
   Ethernet.begin(mac, iotIP, dnsIP, gatewayIP, subnet);
-  
-  // TOLERÂNCIA AUMENTADA: 3.5 segundos para ligar a placa fisicamente
+
   delay(3500); 
 
   Serial.print(F("IP do Arduino: "));
@@ -181,17 +180,17 @@ void setup() {
 
 void loop() {
   if (client.connected()) {
-    // Verifica se há dados disponíveis para leitura no socket TCP
+
     if (client.available()) {
       uint8_t header = client.read();
 
-      // Pacote PUBLISH recebido do Broker
+      
       if ((header & 0xF0) == 0x30) {
         
-        // Aguarda todos os bytes do cabeçalho chegarem
+      
         delay(100); 
 
-        // Lê a extensão do pacote (Remaining Length)
+     
         uint32_t multiplier = 1;
         uint32_t remLen = 0;
         uint8_t encodedByte;
@@ -211,7 +210,7 @@ void loop() {
           client.read();
         }
 
-        // Calcula o tamanho exato do Payload JSON
+      
         int payloadLen = remLen - 2 - topicLen;
 
         Serial.println(F("=================================="));
@@ -219,7 +218,7 @@ void loop() {
         Serial.print(payloadLen);
         Serial.println(F(" bytes) ---"));
 
-        // Lê caractere por caractere o JSON recebido
+      
         for (int i = 0; i < payloadLen; i++) {
           // Aguarda com timeout curto se a rede der uma engasgada
           unsigned long t = millis();
