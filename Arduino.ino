@@ -12,14 +12,14 @@ IPAddress subnet(255, 255, 255, 0);
 IPAddress serverIP(192, 168, 0, 102);
 const uint16_t serverPort = 1883;
 
-const char* mqttUser     = "frota_estufas";
-const char* mqttPass     = "SenhaMqttSegura123";
+const char* mqttUser     = "";
+const char* mqttPass     = "";
 const char* clientID     = "arduino_client_01";
 const char* pubTopic     = "/sensor/token";
-const char* subTopic     = "/sensor/AA:BB:CC:DD/status";
+const char* subTopic     = "/sensor/codigo_serial/status";
 
-const char* codigoSerial = "AA:BB:CC:DD";
-const char* chaveSecreta = "12345678910";
+const char* codigoSerial = "";
+const char* chaveSecreta = "";
 
 EthernetClient client;
 
